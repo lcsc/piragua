@@ -1,8 +1,8 @@
-# piragua
+# piragua <img src="man/figures/piragua-badge.png" align="left" height="100" />
 
 **Streamflow and Trend Analysis Tools for the PIRAGUA Project**
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![R](https://img.shields.io/badge/R-%3E%3D4.1-blue)](https://cran.r-project.org/)
 
 ---
@@ -21,13 +21,13 @@ Install the development version directly from GitHub:
 
 ```r
 # install.packages("remotes")
-remotes::install_github("yourusername/piragua")
+remotes::install_github("sbegueria/piragua")
 ```
 
 Alternatively, clone this repository and build manually:
 
 ```bash
-git clone https://github.com/yourusername/piragua.git
+git clone https://github.com/sbegueria/piragua.git
 R CMD build piragua
 R CMD INSTALL piragua_0.1.0.tar.gz
 ```
@@ -37,7 +37,7 @@ R CMD INSTALL piragua_0.1.0.tar.gz
 ## Documentation
 
 A complete **reference manual** is included in the repository root:  
-👉 [📘 piragua-manual.pdf](./piragua-manual.pdf)
+👉 [📘 piragua_0.1.0.pdf](./piragua_0.1.0.pdf)
 
 After installing the package, documentation can be accessed directly from R:
 
