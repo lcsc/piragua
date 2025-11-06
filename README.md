@@ -108,7 +108,7 @@ If you use this package in your research, please cite:
 
 ## License
 
-GPL-3 © Santiago Beguería
+MIT © Santiago Beguería
 
 ---
 
