@@ -1,0 +1,277 @@
+---
+title: "streamflow-example"
+output: rmarkdown::html_vignette
+author: Santiago Beguería
+date: "`r Sys.Date()`"
+highlight: zenburn
+toc: yes
+vignette: >
+  %\VignetteIndexEntry{Example analysis using piragua}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r setup, include = FALSE}
+# Global knitr options
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+options(xts.message.period.apply.mean = FALSE)
+# Load the local piragua package
+library(devtools)
+library(ggplot2)
+devtools::load_all("..")
+```
+
+# Introduction
+
+## Summary
+
+This notebook demonstrates the workflow used to compute, analyse, and visualize streamflow indicators from daily discharge data within the *PIRAGUA* project.
+It presents the main functions implemented in `functions.R`, which provide a
+standardized framework to summarize hydrological behaviour at different temporal
+scales, assess trends, and produce basic graphical and tabular outputs.
+All functions are part of a custom R package developed within the PIRAGUA
+project to standardize hydrological analyses of observed and modelled streamflows
+in the Pyrenees, but can be used with other streamflow data.
+All computations are based on xts time series objects, ensuring temporal
+consistency and easy handling of missing data.”
+
+## Functions overview
+
+knitr::kable(
+  data.frame(
+    Function = c("piragua_annual", "piragua_monthly", "piragua_trend", "piragua_plot"),
+    Purpose = c("Compute annual streamflow indices", 
+                "Compute monthly streamflow indices", 
+                "Estimate trends (Yue–Pilon method)", 
+                "Generate integrated summary plots")
+  ),
+  caption = "Overview of main PIRAGUA streamflow functions."
+)
+
+The function `piragua_annual()` calculates a comprehensive set of **annual indicators** describing central tendency, dispersion, extremes, and distributional shape of
+daily streamflow or precipitation. These include the mean, standard deviation,
+quantiles (`q10`–`q90`), inter- and decile-based skewness and kurtosis,
+low-flow indices (`vcn3`, `vcn7`), and counts or volumes of exceedances above
+or below key thresholds.  
+
+The function `piragua_monthly()` extends these computations to the **monthly scale**, preserving the same set of statistics for finer temporal resolution. The
+function `piragua_trend()` applies the **Yue–Pilon prewhitening** method and
+**Sen’s slope estimator** to detect and quantify monotonic trends in each
+indicator, while `piragua_plot()` generates **integrated visual summaries**
+combining daily, monthly, and annual patterns, empirical flow distributions,
+and trend diagnostics for each gauging station.  
+
+Together, these routines provide a **reproducible toolkit** for streamflow
+characterization, trend analysis, and reporting of hydrological changes across
+the Pyrenean basin.
+
+## Main streamflow indicators
+
+* **mean**, **sd** – mean and standard deviation of daily streamflow.  
+* **max**, **min** – maximum and minimum daily discharge.  
+* **q10**, **q25**, **q50**, **q75**, **q90** – quantiles representing low,
+median, and high-flow conditions.  
+* **iqr**, **idr** – inter-quartile (`q75–q25`) and inter-decile (`q90–q10`)
+ranges, measuring flow variability.  
+* **qsk**, **dsk**, **dku** – quantile skewness, decile skewness, and decile
+kurtosis, describing asymmetry and peakedness of the flow distribution.  
+* **vcn3**, **vcn7** – 3- and 7-day minimum flow indices (baseflow proxies).  
+* **n_q10**–**n_q90** – number of days below or above each quantile threshold.  
+* **v_q10**–**v_q90** – cumulative volumes of flow below or above each quantile
+threshold (in hm³ or mm, depending on area specification).  
+* **rl20** – estimated discharge corresponding to a 20-year return period.  
+* **na**, **na_3**, **na_5** – counts of missing data and of consecutive
+missing-day periods (3 or 5 days).  
+* *(for precipitation data)*: **nrainy**, **total**, **meanrainy**, **sdrainy**
+describe the frequency, totals, and variability of rainy days.
+
+Unless specified, discharge values are expressed in $m^3 s^{-1}$; when area is
+provided, results are converted to relative units ($mm \equiv kg\ m^{-2}$).
+
+## Hydrological year convention
+
+All analyses follow a **hydrological year definition**, which runs from
+**October to September**. This convention ensures that winter and spring
+high-flow periods are grouped within the same annual cycle, improving the
+interpretation of seasonal flow dynamics.
+
+
+---
+
+# Streamflow trend analysis at one gauging station
+
+The following sections demonstrate the full workflow using daily streamflow
+data from the Gállego River at Anzánigo (station 2203), located in the central
+Spanish Pyrenees.
+
+
+## Data preparation
+
+We first load the daily discharge series and convert it into an `xts`
+time-series object for further analysis.
+
+```{r data}
+data(anzanigo)
+```
+
+## Daily streamflow series
+
+The following plot shows the full daily record, with red bars indicating
+missing values.
+
+```{r gallego-plot, fig.width=8, fig.keep="last", fig.cap="Daily streamflow at Gállego in Anzánigo ($m^3 s^{-1}$)"}
+# Basic plot
+plot(anzanigo,
+  ylab = "m3 s-1",
+  main = "Gállego en Anzánigo",
+  sub = "Daily streamflow"
+)
+
+# Add NAs
+anzanigo.na <- xts::xts(ifelse(is.na(anzanigo), 1, NA), order.by = time(anzanigo))
+points(anzanigo.na, pch = "|", cex = 0.5, col = "red")
+```
+
+\pagebreak
+## Empirical flow distribution (ECDF)
+
+This plot shows the empirical cumulative distribution of daily discharge,
+highlighting the skewed distribution typical of mountain rivers.
+
+```{r ecdf, fig.width=5, fig.cap="Empirical Cumulative Distribution Function (ECDF) of daily streamflow at Gállego in Anzánigo."}
+colnames(anzanigo) <- "value"
+lims <- signif(quantile(anzanigo$value, c(0.002, 0.999), na.rm = TRUE), 1)
+lims[1] <- max(lims[1], 0.01)
+ggplot(anzanigo, aes(x = value)) +
+  stat_ecdf(pad = FALSE) +
+  ggtitle(
+    label = "ECDF of daily streamflow",
+    subtitle = "(Gállego River at Anzánigo)") +
+  ylab("Frequency") +
+  xlab(expression(m^{3} ~ s^{-1})) +
+  scale_y_continuous(breaks = c(0.10, 0.25, 0.5, 0.75, 0.9)) +
+  scale_x_continuous(trans = "log10", limits = lims,
+                     guide = guide_axis(check.overlap = TRUE)) +
+  theme_bw()
+```
+
+\pagebreak
+## Annual streamflow indicators
+
+The following plot displays the annual evolution of all computed indices,
+illustrating interannual variability and long-term hydrological behaviour.
+
+```{r annual_streamflow, fig.width=9, fig.height=9, fig.cap="Annual time series of daily streamflow indicators at Gállego in Anzánigo ($m^3 s^{-1}$)."}
+annual <- piragua_annual(x = anzanigo)
+plot(zoo::as.zoo(annual[, -1]),
+  xlab = "",
+  main = ""
+)
+```
+
+\pagebreak
+When the catchment area is provided, streamflow is expressed as an equivalent
+depth of water (mm), enabling comparison across basins of different size.
+
+```{r annual_streamflow_relative, fig.width=9, fig.height=9, fig.cap="Annual time series of daily streamflow indicators at Gállego in Anzánigo ($mm$)."}
+annual_rel <- piragua_annual(anzanigo, area = 1391)
+plot(zoo::as.zoo(annual_rel[, -1]),
+  xlab = "",
+  main = ""
+)
+```
+
+\pagebreak
+## Monthly streamflow indicators
+
+Monthly statistics provide a more detailed view of intra-annual dynamics,
+allowing identification of seasonal changes in flow regimes.
+
+```{r monthly_streamflow, fig.width=9, fig.height=9, fig.cap="Monthly time series of daily streamflow indicators at Gállego in Anzánigo ($m^3 s^{-1}$)."}
+monthly <- piragua_monthly(x = anzanigo) # , area=1391
+plot(zoo::as.zoo(monthly[, -c(1, 2)]),
+  xlab = "",
+  main = ""
+)
+```
+
+\pagebreak
+## Annual trend analysis
+
+The following table summarizes the estimated long-term trends in each annual
+indicator, computed using the Yue–Pilon prewhitening and Sen’s slope method.
+
+```{r annual_trend, fig.width=9}
+trend_y <- piragua_trend(annual)
+kableExtra::kbl(trend_y, digits = 2, booktabs = TRUE, longtable = TRUE,
+                caption = "Streamflow indices annual trends (m3 s-1)") |> 
+  kableExtra::kable_styling(latex_options = "hold_position", font_size = 8) |>
+  kableExtra::row_spec(0, angle = 90)
+```
+
+\pagebreak
+Trends are here expressed in relative terms (mm), facilitating the comparison
+of trend magnitudes among basins of varying catchment size.
+
+```{r annual_trend_relative, fig.width=9}
+trend_y <- piragua_trend(annual_rel)
+kableExtra::kbl(trend_y, digits = 2, booktabs = TRUE, longtable = TRUE,
+                caption = "Streamflow indices annual trends (mm)") |> 
+  kableExtra::kable_styling(latex_options = "hold_position", font_size = 8) |>
+  kableExtra::row_spec(0, angle = 90)
+```
+
+\pagebreak
+## Monthly trend analysis
+
+Monthly trend estimates reveal the seasonality of changes in streamflow
+indicators. Here, results are shown for October as an example.
+
+```{r monthly_trend, fig.width=9}
+trend_m <- piragua_trend(monthly)
+kableExtra::kbl(trend_m["October", , ], digits = 2, booktabs = TRUE, longtable = TRUE,
+                caption = "Streamflow indices trends for October (m3 s-1)") |> 
+  kableExtra::kable_styling(latex_options = "hold_position", font_size = 8) |>
+  kableExtra::row_spec(0, angle = 90)
+```
+
+\pagebreak
+This table summarizes trends for the 50th percentile (median flow), allowing
+direct comparison of central tendency changes through the hydrological year.
+Similar tables can be generated for any other index by modifying the code below.
+
+```{r q50_trend, fig.width=9}
+kableExtra::kbl(trend_m[, "q50", ], digits = 2, booktabs = TRUE, longtable = TRUE,
+                caption = "50th quantile (median) monthly trends (m3 s-1)") |> 
+  kableExtra::kable_styling(latex_options = "hold_position", font_size = 8) |>
+  kableExtra::row_spec(0, angle = 90)
+```
+
+\pagebreak
+The following table reports the p-values of the trend tests for all months and
+indices, identifying where trends are statistically significant ($p \le 0.05$).
+
+```{r trend_signif, fig.width=9}
+kableExtra::kbl(trend_m[, , "sig"], digits = 2, booktabs = TRUE, longtable = TRUE,
+                caption = "Monthly streamflow indices trends (significance)") |> 
+  kableExtra::kable_styling(latex_options = "hold_position", font_size = 8) |>
+  kableExtra::row_spec(0, angle = 90)
+```
+
+
+## Conclusions
+
+This notebook provides a reproducible workflow to compute hydrological
+indicators, detect trends, and visualize the behaviour of daily streamflow data
+using the `piragua_*` functions.
+The approach is adaptable to multiple gauging stations and can be extended to
+other hydroclimatic variables such as precipitation and temperature.
+
+
+\pagebreak
+## Session information
+
+```{r}
+sessionInfo()
+```

@@ -1,0 +1,38 @@
+Package: piragua
+Title: Streamflow and Trend Analysis Tools for the PIRAGUA Project
+Version: 0.1.0
+Authors@R: c(
+    person("Santiago", "Beguería", role = c("aut", "cre"),
+           email = "santiago.begueria@csic.es"))
+Description: Functions to compute streamflow indicators, perform trend analyses, 
+    and generate graphical summaries for observed and modelled data in the 
+    Pyrenean region. Includes routines for annual and monthly summaries, 
+    trend estimation (Yue-Pilon method), and automated plotting.
+License: `use_mit_license()`
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends: R (>= 4.1)
+Imports:
+    abind,
+    dplyr,
+    evd,
+    ggplot2,
+    gridExtra,
+    ismev,
+    kableExtra,
+    lubridate,
+    dplyr,
+    magrittr,
+    scales,
+    sp,
+    xts,
+    zoo,
+    zyp
+Suggests:
+    knitr,
+    rmarkdown,
+    usethis,
+    devtools
+VignetteBuilder: knitr
