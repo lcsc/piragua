@@ -102,7 +102,7 @@ View its documentation with:
 If you use this package in your research, please cite:
 
 > Beguería, S. (2025). *piragua: Streamflow and Trend Analysis Tools for the PIRAGUA Project*.  
-> CSIC-EEAD. Available at <https://github.com/yourusername/piragua>
+> Available at <https://github.com/yourusername/piragua>
 
 ---
 
