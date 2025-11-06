@@ -60,7 +60,7 @@ browseVignettes("piragua")
 vignette("example", package = "piragua")
 ```
 
-The source vignette file is located in [`vignettes/example.Rmd`](vignettes/example.Rmd).
+The source vignette file is located in [`vignettes/example.Rmd`](vignettes/streamflow-example.Rmd).
 
 ---
 
