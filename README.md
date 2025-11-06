@@ -1,4 +1,4 @@
-# piragua <img src="man/figures/piragua-badge.png" align="left" height="100" />
+# piragua <img src="man/figures/piragua-badge.png" align="left" height="120" />
 
 **Streamflow and Trend Analysis Tools for the PIRAGUA Project**
 
