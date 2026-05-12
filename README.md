@@ -9,9 +9,9 @@
 
 ## Overview
 
-The **piragua** R package provides reproducible tools to compute hydrological indicators, perform trend analyses, and generate summary plots for daily streamflow and precipitation data across the Pyrenean region.  
+The **piragua** R package provides reproducible tools to compute hydrological indicators, perform trend analyses, and generate summary plots for daily streamflow and precipitation data. 
 
-It was developed within the [PIRAGUA project (EFA210/16)](https://www.opcc-ctp.org/en/piragua) to support basin-wide hydrological assessments and reporting of climate-related changes in water resources.
+It was developed within the [PIRAGUA project (EFA210/16)](https://www.opcc-ctp.org/en/piragua) to support basin-wide hydrological assessments and reporting of climate-related changes in water resources of the Pyrenees (France, Spain, Andorre).
 
 ---
 
